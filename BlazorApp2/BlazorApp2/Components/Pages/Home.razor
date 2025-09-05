@@ -1,0 +1,157 @@
+﻿@page "/"
+@using BlazorApp2.Data
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext DbContext
+@rendermode InteractiveServer
+
+<PageTitle>Home</PageTitle>
+
+
+<div class="text-center" style="margin-top: 10px;">
+    <h1>Welcome to Houses Shop</h1>
+</div>
+
+<div
+    style="align-items: center; align-content: center; flex: 1; display: flex; flex-direction: column; margin-top: 20px">
+    <div style="text-align: center; margin-top: 20px; width: 80%">
+        @if (message != null)
+        {
+            <div class="alert alert-danger" role="alert">
+                @message
+            </div>
+        }
+        
+        <form method="post" @onsubmit="AddHouse" @onreset="DeleteAll">
+            <table class="table">
+                <th/>
+                <th/>
+                <th>
+                    <button class="btn btn-primary" type="submit" style="background-color: #26b050; border-color: #26b050">Add House</button>
+                    <button class="btn btn-primary" type="reset" style="background-color: #b32121; border-color: #b32121">Delete all</button>
+                </th>
+                <tr>
+                    <td>
+                        <InputText @bind-Value="Address"/>
+                    </td>
+                    <td>
+                        <InputNumber @bind-Value="Price"/>
+                    </td>
+                    <td>
+                        <InputNumber @bind-Value="CountRooms"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <table class="table">
+            <thead class="thead-light">
+            <tr>
+            </tr>
+            <tr>
+                <th>Address</th>
+                <th>Price</th>
+                <th>Count Rooms</th>
+                <th>Is Sold</th>
+                <th>Delete</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (!Houses.Any())
+            {
+                <tr>
+                    <td colspan="5">No houses available</td>
+                </tr>
+            }
+            @foreach (var house in Houses)
+            {
+                <tr>
+                    <td>@house.Address</td>
+                    <td>@house.Price</td>
+                    <td>@house.CountRooms</td>
+                    @if (house.IsSold)
+                    {
+                        <td>Sold</td>
+                    }
+                    else
+                    {
+                        <td><button @onclick="(() => BuyHouse(house))" class="btn btn-primary">Buy</button></td>
+                    }
+                    <td>
+                        <button class="btn btn-primary" style="background-color: #b32121; border-color: #b32121" @onclick="(() => DeleteHouse(house))"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                            <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                        </svg></button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+@code{
+    private string Address { get; set; } = string.Empty;
+    private int Price { get; set; }
+    private int CountRooms { get; set; }
+    private string message = null;
+
+    List<House> Houses = [];
+    
+    protected override async Task OnInitializedAsync()
+    {
+        Houses = await DbContext.Houses.ToListAsync();
+    }
+
+    void AddHouse()
+    {
+        var house = new House()
+        {
+            Address = Address,
+            Price = Price,
+            CountRooms = CountRooms
+        };
+        if (house.Address == string.Empty || house.Price <= 0 || house.CountRooms <= 0)
+        {
+            Console.WriteLine(house.Address);
+            Console.WriteLine(house.CountRooms);
+            Console.WriteLine(house.Price);
+            message = "Please fill all fields correctly";
+            return;
+        }
+        message = null;
+        Address = string.Empty;
+        Price = 0;
+        CountRooms = 0;
+        Console.WriteLine("House added");
+        DbContext.Houses.Add(house); 
+        DbContext.SaveChanges();
+        Houses = DbContext.Houses.ToList();
+        StateHasChanged();
+    }
+    
+    void DeleteAll()
+    {
+        DbContext.Houses.RemoveRange(DbContext.Houses);
+        DbContext.SaveChanges();
+        Houses = DbContext.Houses.ToList();
+        StateHasChanged();
+    }
+    
+    void BuyHouse(House house)
+    {
+        house.IsSold = true;
+        DbContext.Houses.Update(house);
+        DbContext.SaveChanges();
+        Houses = DbContext.Houses.ToList();
+        StateHasChanged();
+    }
+    
+    void DeleteHouse(House house)
+    {
+        DbContext.Houses.Remove(house);
+        DbContext.SaveChanges();
+        Houses = DbContext.Houses.ToList();
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,19 @@
+﻿services:
+  blazorapp2:
+    image: blazorapp1
+    build:
+      context: .
+      dockerfile: BlazorApp2/BlazorApp2/Dockerfile
+    ports:
+      - 8080:8080
+    depends_on:
+      - mssql1
+
+  mssql1:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      DB_USER: sa
+      SA_PASSWORD: GlzTWgCHN8UrJfM1
+      ACCEPT_EULA: "Y"
+    ports:
+      - 1433:1433
