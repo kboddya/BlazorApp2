@@ -1,6 +1,6 @@
 ﻿services:
   blazorapp2:
-    image: blazorapp1
+    image: blazorapp2
     build:
       context: .
       dockerfile: BlazorApp2/BlazorApp2/Dockerfile

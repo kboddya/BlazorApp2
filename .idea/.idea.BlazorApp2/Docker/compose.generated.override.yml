@@ -13,7 +13,7 @@ services:
       ASPNETCORE_ENVIRONMENT: "Development"
       ASPNETCORE_STATICWEBASSETS: "/app/bin/Debug/net9.0/BlazorApp2.staticwebassets.runtime.CT.json"
       DOTNET_USE_POLLING_FILE_WATCHER: "true"
-    image: "blazorapp1:dev"
+    image: "blazorapp2:dev"
     ports: []
     volumes:
     - "/Users/kboddya/Dev/Project/BlazorApp2/BlazorApp2/BlazorApp2:/app:rw"
