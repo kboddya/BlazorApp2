@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using BlazorApp2.Components;
-using BlazorApp2.Components.Account;
 using BlazorApp2.Data;
+using Microsoft.Data.SqlClient;
+using DotNetEnv;
 
 namespace BlazorApp2;
 
@@ -20,9 +21,6 @@ public class Program
             .AddAuthenticationStateSerialization();
 
         builder.Services.AddCascadingAuthenticationState();
-        builder.Services.AddScoped<IdentityUserAccessor>();
-        builder.Services.AddScoped<IdentityRedirectManager>();
-        builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
         builder.Services.AddAuthentication(options =>
             {
@@ -35,15 +33,8 @@ public class Program
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ??
                                  throw new InvalidOperationException(
                                      "Connection string 'DefaultConnection' not found.")));
+        
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-        builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-            .AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddSignInManager()
-            .AddDefaultTokenProviders();
-
-        builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.
@@ -59,6 +50,12 @@ public class Program
             app.UseHsts();
         }
 
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.Database.Migrate();
+        }
+        
         app.UseHttpsRedirection();
 
         app.UseAntiforgery();
@@ -68,10 +65,7 @@ public class Program
             .AddInteractiveServerRenderMode()
             .AddInteractiveWebAssemblyRenderMode()
             .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
-
-        // Add additional endpoints required by the Identity /Account Razor components.
-        app.MapAdditionalIdentityEndpoints();
-
+        
         app.Run();
     }
 }
